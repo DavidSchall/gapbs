@@ -49,9 +49,9 @@ int64_t BUStep(const Graph &g, pvector<NodeID> &parent, Bitmap &front,
   next.reset();
   #pragma omp parallel for reduction(+ : awake_count) schedule(dynamic, 1024)
   for (NodeID u=0; u < g.num_nodes(); u++) {
-    if (parent[u] < 0) {
-      for (NodeID v : g.in_neigh(u)) {
-        if (front.get_bit(v)) {
+    if (parent[u] < 0) { // BAD_BRANCH, LJ(28%), O(12%)
+      for (NodeID v : g.in_neigh(u)) {  // BAD_BRANCH, LJ(24%, 12%), O(54%)
+        if (front.get_bit(v)) { //BAD_BRANCH, LJ(15%, 9%)
           parent[u] = v;
           awake_count++;
           next.set_bit(u);
@@ -73,9 +73,9 @@ int64_t TDStep(const Graph &g, pvector<NodeID> &parent,
     #pragma omp for reduction(+ : scout_count)
     for (auto q_iter = queue.begin(); q_iter < queue.end(); q_iter++) {
       NodeID u = *q_iter;
-      for (NodeID v : g.out_neigh(u)) {
+      for (NodeID v : g.out_neigh(u)) { // BAD_BRANCH LJ (0), O (0) , r: (24%)
         NodeID curr_val = parent[v];
-        if (curr_val < 0) {
+        if (curr_val < 0) { // BAD_BRANCH, LJ (3%), O(7%), r(52%)
           if (compare_and_swap(parent[v], curr_val, u)) {
             lqueue.push_back(v);
             scout_count += -curr_val;

@@ -68,10 +68,10 @@ const size_t kBinSizeThreshold = 1000;
 inline
 void RelaxEdges(const WGraph &g, NodeID u, WeightT delta,
                 pvector<WeightT> &dist, vector <vector<NodeID>> &local_bins) {
-  for (WNode wn : g.out_neigh(u)) {
+  for (WNode wn : g.out_neigh(u)) {    // BAD_BRANCH (29%)
     WeightT old_dist = dist[wn.v];
     WeightT new_dist = dist[u] + wn.w;
-    while (new_dist < old_dist) {
+    while (new_dist < old_dist) {     // BAD_BRANCH (51%)
       if (compare_and_swap(dist[wn.v], old_dist, new_dist)) {
         size_t dest_bin = new_dist/delta;
         if (dest_bin >= local_bins.size())
@@ -106,7 +106,7 @@ pvector<WeightT> DeltaStep(const WGraph &g, NodeID source, WeightT delta) {
       #pragma omp for nowait schedule(dynamic, 64)
       for (size_t i=0; i < curr_frontier_tail; i++) {
         NodeID u = frontier[i];
-        if (dist[u] >= delta * static_cast<WeightT>(curr_bin_index))
+        if (dist[u] >= delta * static_cast<WeightT>(curr_bin_index)) // BAD_BRANCH (9%)
           RelaxEdges(g, u, delta, dist, local_bins);
       }
       while (curr_bin_index < local_bins.size() &&

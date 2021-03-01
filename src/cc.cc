@@ -42,12 +42,12 @@ using namespace std;
 void Link(NodeID u, NodeID v, pvector<NodeID>& comp) {
   NodeID p1 = comp[u];
   NodeID p2 = comp[v];
-  while (p1 != p2) {
+  while (p1 != p2) { // BAD_BRANCH (12%)
     NodeID high = p1 > p2 ? p1 : p2;
     NodeID low = p1 + (p2 - high);
     NodeID p_high = comp[high];
     // Was already 'low' or succeeded in writing 'low'
-    if ((p_high == low) ||
+    if ((p_high == low) ||  // BAD_BRANCH (11%)
         (p_high == high && compare_and_swap(comp[high], high, low)))
       break;
     p1 = comp[comp[high]];
@@ -60,7 +60,7 @@ void Link(NodeID u, NodeID v, pvector<NodeID>& comp) {
 void Compress(const Graph &g, pvector<NodeID>& comp) {
   #pragma omp parallel for schedule(dynamic, 16384)
   for (NodeID n = 0; n < g.num_nodes(); n++) {
-    while (comp[n] != comp[comp[n]]) {
+    while (comp[n] != comp[comp[n]]) { // BAD_BRANCH (31%)
       comp[n] = comp[comp[n]];
     }
   }
@@ -104,7 +104,7 @@ pvector<NodeID> Afforest(const Graph &g, int32_t neighbor_rounds = 2) {
   for (int r = 0; r < neighbor_rounds; ++r) {
   #pragma omp parallel for schedule(dynamic,16384)
     for (NodeID u = 0; u < g.num_nodes(); u++) {
-      for (NodeID v : g.out_neigh(u, r)) {
+      for (NodeID v : g.out_neigh(u, r)) { // BAD_BRANCH (21%)
         // Link at most one time if neighbor available at offset r
         Link(u, v, comp);
         break;

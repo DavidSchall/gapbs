@@ -122,8 +122,8 @@ pvector<ScoreT> Brandes(const Graph &g, SourcePicker<Graph> &sp,
       for (auto it = depth_index[d]; it < depth_index[d+1]; it++) {
         NodeID u = *it;
         ScoreT delta_u = 0;
-        for (NodeID &v : g.out_neigh(u)) {
-          if (succ.get_bit(&v - g_out_start)) {
+        for (NodeID &v : g.out_neigh(u)) {    // BAD_BRANCH (14%)
+          if (succ.get_bit(&v - g_out_start)) {    // BAD_BRANCH LJ (29%), O(32%), R(26%)
             delta_u += (path_counts[u] / path_counts[v]) * (1 + deltas[v]);
           }
         }

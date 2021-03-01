@@ -45,7 +45,7 @@ pvector<ScoreT> PageRankPull(const Graph &g, int max_iters,
     #pragma omp parallel for reduction(+ : error) schedule(dynamic, 64)
     for (NodeID u=0; u < g.num_nodes(); u++) {
       ScoreT incoming_total = 0;
-      for (NodeID v : g.in_neigh(u))
+      for (NodeID v : g.in_neigh(u)) //BAD_BRANCH (92% and 8% of mispredictions)
         incoming_total += outgoing_contrib[v];
       ScoreT old_score = scores[u];
       scores[u] = base_score + kDamp * incoming_total;
